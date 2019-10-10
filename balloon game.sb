@@ -1,0 +1,129 @@
+'Sets up the game window and event listener
+GraphicsWindow.Width = 600
+GraphicsWindow.Height = 300
+GraphicsWindow.DrawRectangle(30,30,540,240)
+GraphicsWindow.KeyDown = OnKeyDown
+
+'Draw the balloon
+GraphicsWindow.BrushColor = "LightGreen"
+GraphicsWindow.PenColor = "PaleGreen"
+balloon = Shapes.AddEllipse(40,40)
+Shapes.Move(balloon,50,130)
+
+'Draw the player's cannon
+GraphicsWindow.BrushColor = "Black"
+GraphicsWindow.PenColor = "Black"
+playerGun = Shapes.AddRectangle(30,10)
+playerBody = Shapes.AddRectangle(50,30)
+Shapes.Move(playerGun,480,40)
+Shapes.Move(playerBody,500,30)
+
+'Initiallize global variables
+newBullet = "True" 'Indicate whether another bullet is required or not
+hitBalloon = "False" 'Indicate whether the balloon has been shot
+missedBullets = 0 'Number of missed bullets
+
+'While loop for the game, only stops if the balloon has been hit
+While(hitBalloon = "False")
+  'Moves the balloon in a random direction
+  y=Shapes.GetTop(balloon)
+  direction=1 'Moves the balloon down
+  If (Math.GetRandomNumber(2) = 2) Then
+    direction = -1 'Moves the balloon up
+  EndIf
+  
+  'Prevent the player from moving down and leaves the game window
+  If(y>=230 And direction=1) Then 
+    y=230
+    direction=-1 
+  EndIf
+  
+  'Prevent the player from moving up and leaves the game window
+  If (y<=30 And direction=-1) Then
+    y=50
+    direction=1
+  EndIf
+  
+  Shapes.Animate(balloon,50,y+20*direction,500)
+  
+  'Moves the bullet and balloon hit detection
+  If (newBullet = "False") Then
+    bulletX = Shapes.GetLeft(bullet)
+    bulletY = Shapes.GetTop(bullet)
+    
+    'Chech whether the bullet hit the balloon or not
+    If (bulletX > Shapes.GetLeft(balloon)-10 And bulletX < Shapes.GetLeft(balloon) + 50) Then
+      If (bulletY > Shapes.GetTop(balloon)-10 And bulletY < Shapes.GetTop(balloon) + 50) Then
+        Shapes.Move(bullet,bulletX-30,bulletY)
+        hitBalloon = "True"
+      EndIf
+    EndIf
+    
+    'Moves the bullet, or removes it if it reached the other side of the game window
+    If (hitBalloon = "False") Then
+      If (bulletX < 40) Then
+        Shapes.Remove(bullet)
+        bullet = ""
+        newBullet = "True"
+        missedBullets = missedBullets + 1
+      EndIf
+      Shapes.Move(bullet,bulletX-30,bulletY)
+    EndIf
+ 
+  EndIf
+  Program.Delay(1000)
+EndWhile
+
+'Victory message
+GraphicsWindow.ShowMessage("Number of missed shots: "+missedBullets, "You Win, Congratulation")
+
+'Event handler for button inputs
+Sub OnKeyDown
+  y1=Shapes.GetTop(playerBody)
+  
+  'Moves the player Down
+  If (GraphicsWindow.LastKey = "Down") Then
+    Shapes.Move(playerGun,480,y1+31)
+    Shapes.Move(playerBody,500,y1+21)
+  EndIf
+  
+  'Moves the player up
+  If (GraphicsWindow.LastKey = "Up") Then
+    Shapes.Move(playerGun,480,y1-11)
+    Shapes.Move(playerBody,500,y1-21)
+  EndIf
+  
+  'Prevent the player from moving up and leaves the game window
+  If (y1<=40 And GraphicsWindow.LastKey = "Up") Then
+    Shapes.Move(playerGun,480,250)
+    Shapes.Move(playerBody,500,240)
+  EndIf
+  
+  'Prevent the player from moving down and leaves the game window
+  If (y1>=240 And GraphicsWindow.LastKey = "Down") Then
+    Shapes.Move(playerGun,480,40)
+    Shapes.Move(playerBody,500,30)
+  EndIf
+  
+  'Fire a bullet
+  If (GraphicsWindow.LastKey = "Space") Then
+    Fire()
+  EndIf
+EndSub
+
+'Subroutine to create a bullet
+Sub Fire
+  If (newBullet = "True") Then
+    gunX = Shapes.GetLeft(playerGun)
+    gunY = Shapes.GetTop(playerGun)
+    
+    'Create a bullet
+    GraphicsWindow.BrushColor = "Gray"
+    GraphicsWindow.PenColor = "Gray"
+    bullet = Shapes.AddRectangle(10,10)
+    Shapes.Move(bullet,gunX, gunY)
+    
+    'Prevent the player from firing another bullet
+    newBullet = "False"
+  EndIf
+EndSub
